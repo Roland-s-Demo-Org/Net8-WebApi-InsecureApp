@@ -336,9 +336,7 @@ namespace Net8_WebApi_InsecureApp.Controllers
                     // VULNÉRABLE: Parse XML avec des paramètres non sécurisés
                     var settings = new XmlReaderSettings
                     {
-                        DtdProcessing = DtdProcessing.Parse, // VULNÉRABLE: XXE possible
-                        XmlResolver = new XmlUrlResolver(), // VULNÉRABLE: Résolution d'URL externe
-                        MaxCharactersFromEntities = long.MaxValue
+                        DtdProcessing = DtdProcessing.Ignore
                     };
 
                     using var stringReader = new StringReader(xml);
