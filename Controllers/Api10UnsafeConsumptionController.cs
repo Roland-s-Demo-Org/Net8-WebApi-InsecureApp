@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Net8_WebApi_InsecureApp.Data;
 using Net8_WebApi_InsecureApp.Models;
@@ -344,7 +344,16 @@ namespace Net8_WebApi_InsecureApp.Controllers
                     using var stringReader = new StringReader(xml);
                     using var xmlReader = XmlReader.Create(stringReader, settings);
 
-                    var feed = SyndicationFeed.Load(xmlReader);
+                    // create secure settings
+                    var secureSettings = new XmlReaderSettings();
+                    secureSettings.DtdProcessing = DtdProcessing.Ignore;
+
+                    // wrap existing reader
+                    SyndicationFeed feed;
+                    using (var secureReader = XmlReader.Create(xmlReader, secureSettings))
+                    {
+                        feed = SyndicationFeed.Load(secureReader);
+                    }
 
                     // VULNÉRABLE: Execute du contenu HTML si demandé
                     if (request.ParseHtml)
