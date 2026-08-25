@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Net8_WebApi_InsecureApp.Data;
 using Net8_WebApi_InsecureApp.Models;
@@ -558,10 +558,17 @@ namespace Net8_WebApi_InsecureApp.Controllers
             // VULNÉRABLE: Utilisation directe du nom de fichier client
             var fileName = file.FileName; // Peut contenir ../../../ 
             var filePath = Path.Combine(uploadPath, fileName);
+            var baseFull = Path.GetFullPath(uploadPath);
+            var fullPath = Path.GetFullPath(filePath);
+            if (!fullPath.StartsWith(baseFull + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                && fullPath != baseFull)
+            {
+                throw new ArgumentException("Invalid file path");
+            }
             // VULNÉRABLE: Pas de vérification d'extension
             // Accepte .exe, .dll, .aspx, .config, etc.
             // VULNÉRABLE: Sauvegarde directe sans validation
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (var stream = new FileStream(fullPath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
@@ -571,7 +578,7 @@ namespace Net8_WebApi_InsecureApp.Controllers
             using var content = new MultipartFormDataContent();
 
             // VULNÉRABLE: Relecture du fichier sans validation
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
             var fileContent = new ByteArrayContent(fileBytes);
 
             // VULNÉRABLE: Trust du Content-Type original
@@ -590,7 +597,7 @@ namespace Net8_WebApi_InsecureApp.Controllers
                 url = publicUrl,
                 fileName = fileName,
                 // VULNÉRABLE: Expose le chemin réel
-                path = filePath,
+                path = fullPath,
                 // VULNÉRABLE: Expose la réponse de l'API externe
                 externalApiResponse = externalResponse
             });
